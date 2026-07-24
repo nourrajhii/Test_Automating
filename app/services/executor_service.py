@@ -7,18 +7,24 @@ FIX 1 : sys.executable garantit le python du venv (évite Python 3.14 système)
 FIX 2 : filtre le bruit zipimport/KeyboardInterrupt dans stderr
 FIX 3 : ne supprime plus le script avant que le rapport soit transmis
 FIX 4 : env nettoyé — supprime les valeurs None qui causent KeyError sur Windows
+<<<<<<< HEAD
 FIX 5 : parse la ligne RESULT_JSON imprimée par le script généré (voir
         script_service.BOILERPLATE_FOOTER_TEMPLATE) pour remplir temps
         d'exécution, étapes, assertions, URL finale, titre et screenshot.
         Rétro-compatible : si absente (ancien script), les champs restent
         à leurs valeurs par défaut (0 / None) sans planter.
+=======
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
 """
 import subprocess
 import uuid
 import os
 import sys
 import re
+<<<<<<< HEAD
 import json
+=======
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
 
 from app.config import REPORTS_DIR, EXECUTION_TIMEOUT
 from app.models.schemas import GeneratedScript, ExecutionReport
@@ -54,6 +60,7 @@ def _safe_env() -> dict:
     base = {k: v for k, v in os.environ.items() if isinstance(v, str) and v is not None}
     base["PYTHONPATH"] = os.getcwd()
     base["PYTHONDONTWRITEBYTECODE"] = "1"
+<<<<<<< HEAD
     # FIX UnicodeEncodeError (Windows, cp1252) : force l'UTF-8 pour TOUTE
     # sortie du script enfant (print, stdout, stderr), indépendamment de la
     # code page active de la console Windows. Complète le
@@ -80,6 +87,11 @@ def _parse_result_json(stdout_text: str) -> dict:
     return {}
 
 
+=======
+    return base
+
+
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
 def execute_script(generated: GeneratedScript) -> ExecutionReport:
     os.makedirs(REPORTS_DIR, exist_ok=True)
     script_id   = str(uuid.uuid4())[:8]
@@ -93,18 +105,25 @@ def execute_script(generated: GeneratedScript) -> ExecutionReport:
             [sys.executable, script_path],   # sys.executable = venv python
             capture_output=True,
             text=True,
+<<<<<<< HEAD
             encoding="utf-8",                # FIX Windows : ne pas dépendre
             errors="replace",                # de la code page cp1252 pour décoder
+=======
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
             timeout=EXECUTION_TIMEOUT,
             env=_safe_env(),                 # env nettoyé, sans None
         )
 
+<<<<<<< HEAD
         stdout_text  = result.stdout
         result_data  = _parse_result_json(stdout_text)
 
         # La ligne RESULT_JSON est une métadonnée machine, déjà exploitée
         # ci-dessus -> on la retire des logs affichés à l'utilisateur.
         stdout_lines = [l for l in stdout_text.splitlines() if not l.startswith("RESULT_JSON:")]
+=======
+        stdout_lines = result.stdout.splitlines()
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
         stderr_raw   = result.stderr
         stderr_clean = _filter_noise(stderr_raw)
         stderr_lines = stderr_clean.splitlines() if stderr_clean else []
@@ -132,17 +151,27 @@ def execute_script(generated: GeneratedScript) -> ExecutionReport:
         # - "PASS:" dans stdout : OK même si returncode != 0
         # - "PARTIAL:" dans stdout : succès partiel (on marque success=True
         #   pour que le frontend affiche ✓ plutôt que ✗)
+<<<<<<< HEAD
         # - result_data["success"] : filet de sécurité si les préfixes
         #   texte ci-dessus venaient à changer
         has_pass     = "PASS:"    in stdout_text
         has_partial  = "PARTIAL:" in stdout_text
         is_success   = (result.returncode == 0) or has_pass or has_partial or bool(result_data.get("success"))
+=======
+        stdout_text  = result.stdout
+        has_pass     = "PASS:"    in stdout_text
+        has_partial  = "PARTIAL:" in stdout_text
+        is_success   = (result.returncode == 0) or has_pass or has_partial
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
 
         error_msg = None
         if not is_success and stderr_clean:
             error_msg = stderr_clean[:2000] or None
+<<<<<<< HEAD
         if not error_msg and result_data.get("error"):
             error_msg = str(result_data["error"])[:2000]
+=======
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
 
         # NOTE : on ne supprime PAS le fichier ici
         # Le frontend affiche le code via script_done (SSE) — le fichier
@@ -156,6 +185,7 @@ def execute_script(generated: GeneratedScript) -> ExecutionReport:
         return ExecutionReport(
             success=is_success,
             logs=all_logs,
+<<<<<<< HEAD
             screenshot_path=result_data.get("screenshot_path"),
             error=error_msg,
             execution_time=result_data.get("execution_time"),
@@ -218,6 +248,17 @@ def execute_script(generated: GeneratedScript) -> ExecutionReport:
             success=False,
             logs=all_logs,
             error=error_msg,
+=======
+            screenshot_path=None,
+            error=error_msg,
+        )
+
+    except subprocess.TimeoutExpired:
+        return ExecutionReport(
+            success=False,
+            logs=[],
+            error=f"Timeout : script dépasse {EXECUTION_TIMEOUT}s.",
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
         )
     except Exception as e:
         return ExecutionReport(

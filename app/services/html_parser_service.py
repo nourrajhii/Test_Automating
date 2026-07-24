@@ -17,6 +17,7 @@ FIX 3 : num_predict du fallback augmenté à 1500 pour ne pas tronquer la
 """
 import httpx
 import json
+<<<<<<< HEAD
 import logging
 import re
 from bs4 import BeautifulSoup, Tag
@@ -54,6 +55,14 @@ _CONTENT_ZONE_KEYWORDS: dict[str, tuple[str, ...]] = {
     "widget": ("widget",),
 }
 
+=======
+import re
+from bs4 import BeautifulSoup, Tag
+
+from app.config import OLLAMA_BASE_URL, TEXT_MODEL, TEXT_TIMEOUT
+from app.models.schemas import UIAnalysisResult, UIElement
+
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
 
 # ── Constantes : valeurs de selector_hint invalides / placeholder ─────────────
 # Ces valeurs ne doivent JAMAIS être transmises à Selenium comme sélecteur réel.
@@ -66,6 +75,7 @@ _INVALID_SELECTORS = {
 }
 
 
+<<<<<<< HEAD
 # ── Détection heuristique des liens externes ───────────────────────────────
 # On ne connaît pas le domaine d'origine du HTML brut fourni (pas de vraie
 # navigation, contrairement à live_dom_service qui, lui, a une vraie URL) —
@@ -79,6 +89,8 @@ def _is_external_link(href: str) -> bool:
     return bool(href) and href.strip().lower().startswith(("http://", "https://"))
 
 
+=======
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
 def _is_valid_selector(sel: str | None) -> bool:
     """Vérifie qu'un selector_hint est utilisable par Selenium."""
     if not sel:
@@ -119,11 +131,16 @@ def _node_looks_hidden(node: Tag) -> bool:
     return False
 
 
+<<<<<<< HEAD
 def _is_hidden(tag: Tag, max_depth: int = 8, dropdown_container_ids: set | None = None) -> bool:
+=======
+def _is_hidden(tag: Tag, max_depth: int = 8) -> bool:
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
     """
     Vérifie si l'élément OU un de ses parents proches est masqué.
     Beaucoup de sites cachent un conteneur entier (form, div) plutôt que
     chaque champ individuellement — se limiter à `tag` seul rate ces cas.
+<<<<<<< HEAD
 
     FIX sous-menus : les menus déroulants (dropdown/flyout) sont presque
     toujours cachés par défaut via `style="display:none"` (ou
@@ -247,12 +264,20 @@ def _looks_like_language_link(tag: Tag) -> bool:
     while node is not None and isinstance(node, Tag) and depth < 3:
         combined = f"{node.get('id') or ''} {' '.join(node.get('class') or [])}".lower()
         if any(hint in combined for hint in _LANGUAGE_CONTAINER_HINTS):
+=======
+    """
+    node = tag
+    depth = 0
+    while node is not None and isinstance(node, Tag) and depth < max_depth:
+        if _node_looks_hidden(node):
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
             return True
         node = node.parent
         depth += 1
     return False
 
 
+<<<<<<< HEAD
 def _detect_language_links(soup: BeautifulSoup) -> set:
     """Retourne {id(tag), ...} pour tous les <a> identifiés comme faisant
     partie d'un sélecteur de langue. On n'active le regroupement QUE s'il y
@@ -371,6 +396,8 @@ def _is_junk_link(label_text: str, href: str, has_real_text_signal: bool) -> boo
     return label in _JUNK_HREF_VALUES or href_clean in _JUNK_HREF_VALUES or label == href_clean
 
 
+=======
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
 def _submit_input_is_redundant(tag: Tag) -> bool:
     """
     Pattern très courant (Facebook compris) : un <input type="submit">
@@ -391,6 +418,7 @@ def _submit_input_is_redundant(tag: Tag) -> bool:
 # ── Nettoyage HTML ────────────────────────────────────────────────────────────
 
 def _clean_html(raw: str) -> str:
+<<<<<<< HEAD
     """
     FIX BUG RACINE (couverture incomplète sur les grosses pages) :
     l'ancienne version tronquait le HTML nettoyé à 40 000 caractères, AVANT
@@ -422,10 +450,17 @@ def _clean_html(raw: str) -> str:
             len(cleaned), MAX_HTML_CHARS,
         )
     return cleaned[:MAX_HTML_CHARS]
+=======
+    soup = BeautifulSoup(raw, "html.parser")
+    for tag in soup(["script", "style", "svg", "noscript", "link", "meta"]):
+        tag.decompose()
+    return str(soup)[:40000]
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
 
 
 # ── Détection du contexte (section parente) ───────────────────────────────────
 
+<<<<<<< HEAD
 def _humanize_zone_label(raw: str) -> str:
     """
     Filet de secours UNIQUEMENT : utilisé quand _container_display_title
@@ -514,6 +549,8 @@ def _container_display_title(container: Tag) -> str | None:
     return None
 
 
+=======
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
 def _get_context(tag: Tag) -> str:
     for parent in tag.parents:
         if not isinstance(parent, Tag):
@@ -524,12 +561,15 @@ def _get_context(tag: Tag) -> str:
         pdata = (parent.get("data-test-id") or "").lower()
         combined = f"{name} {pid} {pclass} {pdata}"
 
+<<<<<<< HEAD
         # Zones structurelles reconnues par leur RÔLE (pas par leur nom
         # technique) : elles restent des mots-clés internes utilisés par le
         # reste du pipeline pour appliquer des règles connues (navbar =
         # menu principal, footer = pied de page...). Ce ne sont jamais les
         # titres affichés à l'utilisateur final (voir navigation_discovery_
         # service, qui les traduit en phrases fonctionnelles).
+=======
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
         if "footer" in combined or name == "footer":
             return "footer"
         if "nav" in combined or name == "nav":
@@ -550,13 +590,17 @@ def _get_context(tag: Tag) -> str:
             return "learning"
         if "talent" in combined or "job" in combined or "emploi" in combined:
             return "jobs"
+<<<<<<< HEAD
         for zone_key, keywords in _CONTENT_ZONE_KEYWORDS.items():
             if any(kw in combined for kw in keywords):
                 return zone_key
+=======
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
         if name == "form":
             return "form"
         if name == "header":
             return "header"
+<<<<<<< HEAD
         if name in ("section", "main", "article", "aside", "div"):
             # On ne traite un <div> comme un conteneur fonctionnel à part
             # entière que s'il a un id/classe (sinon il est trop générique
@@ -568,6 +612,11 @@ def _get_context(tag: Tag) -> str:
                 return heading
             raw = pid or pdata or (pclass.split()[0] if pclass else name)
             return _humanize_zone_label(raw)
+=======
+        if name in ("section", "main", "article", "aside"):
+            label = pid or pdata or (pclass.split()[0] if pclass else name)
+            return label[:30]
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
     return "page"
 
 
@@ -626,12 +675,18 @@ def _parse_html_elements(html_code: str) -> list[UIElement]:
     elements: list[UIElement] = []
     soup = BeautifulSoup(html_code, "html.parser")
 
+<<<<<<< HEAD
     dropdown_container_ids, submenu_child_to_parent = _detect_dropdown_menus(soup)
     language_link_ids = _detect_language_links(soup)
 
     for tag in soup.find_all("input"):
         input_type = tag.get("type", "text").lower()
         if input_type == "hidden" or _is_hidden(tag, dropdown_container_ids=dropdown_container_ids):
+=======
+    for tag in soup.find_all("input"):
+        input_type = tag.get("type", "text").lower()
+        if input_type == "hidden" or _is_hidden(tag):
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
             continue
         if input_type == "submit" and _submit_input_is_redundant(tag):
             continue
@@ -640,6 +695,7 @@ def _parse_html_elements(html_code: str) -> list[UIElement]:
             or tag.get("name") or tag.get("id") or f"input_{input_type}"
         )
         ctx = _get_context(tag)
+<<<<<<< HEAD
         trigger = submenu_child_to_parent.get(id(tag))
         hover_selector, hover_label = None, None
         if trigger is not None:
@@ -659,6 +715,15 @@ def _parse_html_elements(html_code: str) -> list[UIElement]:
 
     for tag in soup.find_all("button"):
         if _is_hidden(tag, dropdown_container_ids=dropdown_container_ids):
+=======
+        elements.append(UIElement(
+            type=f"input_{input_type}", label=f"[{ctx}] {label_text}",
+            selector_hint=_build_selector(tag),
+        ))
+
+    for tag in soup.find_all("button"):
+        if _is_hidden(tag):
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
             continue
         label_text = (
             tag.get("aria-label") or tag.get_text(strip=True)
@@ -670,16 +735,24 @@ def _parse_html_elements(html_code: str) -> list[UIElement]:
         elements.append(UIElement(
             type="button", label=f"[{ctx}] {label_text[:100]}",
             selector_hint=_build_selector(tag),
+<<<<<<< HEAD
             zone=ctx,
         ))
 
     for tag in soup.find_all("input", type="submit"):
         if _is_hidden(tag, dropdown_container_ids=dropdown_container_ids) or _submit_input_is_redundant(tag):
+=======
+        ))
+
+    for tag in soup.find_all("input", type="submit"):
+        if _is_hidden(tag) or _submit_input_is_redundant(tag):
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
             continue
         ctx = _get_context(tag)
         elements.append(UIElement(
             type="button", label=f"[{ctx}] {tag.get('value', 'Submit')}",
             selector_hint=_build_selector(tag),
+<<<<<<< HEAD
             zone=ctx,
         ))
 
@@ -734,10 +807,26 @@ def _parse_html_elements(html_code: str) -> list[UIElement]:
                 or trigger.get("title") or "menu"
             )[:80]
 
+=======
+        ))
+
+    for tag in soup.find_all("a"):
+        if _is_hidden(tag):
+            continue
+        label_text = (
+            tag.get("aria-label") or tag.get_text(strip=True)
+            or tag.get("title") or tag.get("href", "#")
+        )
+        if not label_text or len(label_text) > 100:
+            continue
+        href = tag.get("href", "")
+        ctx = _get_context(tag)
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
         elements.append(UIElement(
             type="link", label=f"[{ctx}] {label_text[:80]}",
             selector_hint=_build_selector(tag), is_link=True,
             possible_destination=href[:150] if href and href not in ("#", "/", "") else None,
+<<<<<<< HEAD
             requires_hover=requires_hover,
             hover_target_hint=hover_selector,
             hover_target_label=hover_label,
@@ -748,28 +837,48 @@ def _parse_html_elements(html_code: str) -> list[UIElement]:
 
     for tag in soup.find_all("select"):
         if _is_hidden(tag, dropdown_container_ids=dropdown_container_ids):
+=======
+        ))
+
+    for tag in soup.find_all("select"):
+        if _is_hidden(tag):
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
             continue
         label_text = tag.get("aria-label") or tag.get("name") or tag.get("id") or "select"
         ctx = _get_context(tag)
         elements.append(UIElement(
             type="select", label=f"[{ctx}] {label_text}",
             selector_hint=_build_selector(tag),
+<<<<<<< HEAD
             zone=ctx,
         ))
 
     for tag in soup.find_all("textarea"):
         if _is_hidden(tag, dropdown_container_ids=dropdown_container_ids):
+=======
+        ))
+
+    for tag in soup.find_all("textarea"):
+        if _is_hidden(tag):
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
             continue
         label_text = tag.get("placeholder") or tag.get("aria-label") or tag.get("name") or "textarea"
         ctx = _get_context(tag)
         elements.append(UIElement(
             type="textarea", label=f"[{ctx}] {label_text}",
             selector_hint=_build_selector(tag),
+<<<<<<< HEAD
             zone=ctx,
         ))
 
     for tag in soup.find_all("input", type=["checkbox", "radio"]):
         if _is_hidden(tag, dropdown_container_ids=dropdown_container_ids):
+=======
+        ))
+
+    for tag in soup.find_all("input", type=["checkbox", "radio"]):
+        if _is_hidden(tag):
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
             continue
         label_el = soup.find("label", {"for": tag.get("id", "")})
         label_text = (
@@ -780,13 +889,20 @@ def _parse_html_elements(html_code: str) -> list[UIElement]:
         elements.append(UIElement(
             type=tag.get("type"), label=f"[{ctx}] {label_text}",
             selector_hint=_build_selector(tag),
+<<<<<<< HEAD
             zone=ctx,
+=======
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
         ))
 
     for tag in soup.find_all(attrs={"role": ["button", "link", "menuitem", "tab", "option"]}):
         if tag.name in ("button", "a", "input"):
             continue
+<<<<<<< HEAD
         if _is_hidden(tag, dropdown_container_ids=dropdown_container_ids):
+=======
+        if _is_hidden(tag):
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
             continue
         label_text = (
             tag.get("aria-label") or tag.get_text(strip=True)
@@ -799,6 +915,7 @@ def _parse_html_elements(html_code: str) -> list[UIElement]:
         elements.append(UIElement(
             type=f"role_{role}", label=f"[{ctx}] {label_text[:80]}",
             selector_hint=_build_selector(tag),
+<<<<<<< HEAD
             zone=ctx,
         ))
 
@@ -826,6 +943,8 @@ def _parse_html_elements(html_code: str) -> list[UIElement]:
             type=f"js_{tag.name}", label=f"[{ctx}] {label_text[:80]}",
             selector_hint=_build_selector(tag),
             zone=ctx,
+=======
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
         ))
 
     seen = set()
@@ -836,6 +955,7 @@ def _parse_html_elements(html_code: str) -> list[UIElement]:
             seen.add(key)
             deduped.append(el)
 
+<<<<<<< HEAD
     # FIX Problème 7 : ce cap était fixé à 50 alors que les éléments sont
     # accumulés type par type (input, button, submit, a, select, textarea,
     # checkbox/radio, role=..., js=...). Sur une page riche (formulaire
@@ -861,6 +981,9 @@ def _parse_html_elements(html_code: str) -> list[UIElement]:
             len(deduped), MAX_UI_ELEMENTS, len(deduped) - MAX_UI_ELEMENTS,
         )
     return deduped[:MAX_UI_ELEMENTS]
+=======
+    return deduped[:50]
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
 
 
 # ── Détection du type de page ─────────────────────────────────────────────────
@@ -1005,6 +1128,7 @@ async def analyze_html_code(html_code: str) -> UIAnalysisResult:
 
     page_type, description = await _detect_page_type(cleaned)
 
+<<<<<<< HEAD
     # NOTE : raw_description est un résumé À USAGE INTERNE (logs, debug),
     # PAS un texte destiné à être affiché à l'utilisateur avant les
     # scénarios (voir règle produit : jamais de jargon technique du type
@@ -1014,6 +1138,15 @@ async def analyze_html_code(html_code: str) -> UIAnalysisResult:
     raw_desc = (description or f"Interface de type {page_type}").strip()
     if not raw_desc.endswith("."):
         raw_desc += "."
+=======
+    raw_desc = f"Page type: {page_type}. {description}. "
+    raw_desc += f"{len(elements)} elements detected in contexts: "
+    contexts = sorted(set(
+        el.label.split("]")[0].replace("[", "").strip()
+        for el in elements if "]" in (el.label or "")
+    ))
+    raw_desc += ", ".join(contexts)
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
 
     return UIAnalysisResult(
         elements=elements,

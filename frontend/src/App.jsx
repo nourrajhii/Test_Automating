@@ -27,23 +27,33 @@ function elementStyle(type) {
 
 // ── Composant principal ───────────────────────────────────────────────────────
 export default function App() {
+<<<<<<< HEAD
   const [inputMode, setInputMode] = useState("code"); // "code" | "screenshot"
   const [code, setCode]           = useState("");
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [targetUrl, setTargetUrl] = useState("");
+=======
+  const [code, setCode]           = useState("");
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
   const [running, setRunning]     = useState(false);
   const [stages, setStages]       = useState({});
   const [analysis, setAnalysis]   = useState(null);
   const [scenarios, setScenarios] = useState([]);   // tous les scénarios
   const [scripts, setScripts]     = useState({});   // {idx: code}
   const [reports, setReports]     = useState({});   // {idx: report}
+<<<<<<< HEAD
   const [diagnoses, setDiagnoses] = useState({});   // {idx: diagnosis IA (cause + patch)}
   const [agentReports, setAgentReports] = useState({}); // {idx: bloc texte format "Agent IA"}
   const [activeScenario, setActiveScenario] = useState(0);
   const [activeTab, setActiveTab] = useState("scenarios");
   const [error, setError]         = useState(null);
   const [warning, setWarning]     = useState(null);
+=======
+  const [activeScenario, setActiveScenario] = useState(0);
+  const [activeTab, setActiveTab] = useState("elements");
+  const [error, setError]         = useState(null);
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
   const [summary, setSummary]     = useState(null);
   const abortRef = useRef(null);
 
@@ -55,6 +65,7 @@ export default function App() {
     setScenarios([]);
     setScripts({});
     setReports({});
+<<<<<<< HEAD
     setDiagnoses({});
     setAgentReports({});
     setActiveScenario(0);
@@ -78,10 +89,22 @@ export default function App() {
   // ── Pipeline SSE ─────────────────────────────────────────────────────────
   const runPipeline = async () => {
     if (!canRun) return;
+=======
+    setActiveScenario(0);
+    setActiveTab("elements");
+    setError(null);
+    setSummary(null);
+  }, []);
+
+  // ── Pipeline SSE ─────────────────────────────────────────────────────────
+  const runPipeline = async () => {
+    if (!code.trim()) return;
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
     reset();
     setRunning(true);
 
     const form = new FormData();
+<<<<<<< HEAD
     let endpoint;
     if (inputMode === "code") {
       form.append("html_code", code);
@@ -91,12 +114,19 @@ export default function App() {
       if (targetUrl.trim()) form.append("target_url", targetUrl.trim());
       endpoint = "/generate-stream-vision";
     }
+=======
+    form.append("html_code", code);
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
 
     const controller = new AbortController();
     abortRef.current = controller;
 
     try {
+<<<<<<< HEAD
       const resp = await fetch(`${API_BASE}${endpoint}`, {
+=======
+      const resp = await fetch(`${API_BASE}/generate-stream`, {
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
         method: "POST",
         body: form,
         signal: controller.signal,
@@ -147,8 +177,12 @@ const handleEvent = (event, payload) => {
       case "parse_done":
         setStages(p => ({ ...p, parse: "done" }));
         setAnalysis(payload.analysis);
+<<<<<<< HEAD
         // Le rapport commence directement par les scénarios — on ne
         // bascule plus automatiquement sur l'onglet technique "Éléments".
+=======
+        setActiveTab("elements");
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
         break;
       case "scenarios_done":
         setStages(p => ({ ...p, scenario: "done" }));
@@ -172,21 +206,27 @@ const handleEvent = (event, payload) => {
       case "exec_done":
         setStages(p => ({ ...p, exec: "active" }));
         setReports(p => ({ ...p, [payload.scenario_index]: payload.execution_report }));
+<<<<<<< HEAD
         if (payload.diagnosis) {
           setDiagnoses(p => ({ ...p, [payload.scenario_index]: payload.diagnosis }));
         }
         if (payload.agent_report) {
           setAgentReports(p => ({ ...p, [payload.scenario_index]: payload.agent_report }));
         }
+=======
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
         break;
       case "complete":
         setStages(p => ({ ...p, script: "done", exec: "done" }));
         setSummary(payload);
         setActiveTab("results");
         break;
+<<<<<<< HEAD
       case "warning":
         setWarning(payload.message || "Analyse en mode dégradé.");
         break;
+=======
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
       case "error":
         setError(payload.message || (payload.traceback ? payload.traceback.split("\n").filter(Boolean).pop() : null) || "Timeout Ollama — modele trop lent ou non disponible");
         break;
@@ -214,6 +254,7 @@ const handleEvent = (event, payload) => {
         <section className="col-left">
           <div className="card">
             <div className="card-header">
+<<<<<<< HEAD
               <span>{inputMode === "code" ? "📄 Code de l'interface" : "🖼️ Capture d'écran"}</span>
               <span className="hint">HTML · JSX · Vue · Angular · Image</span>
             </div>
@@ -287,23 +328,44 @@ const handleEvent = (event, payload) => {
               </div>
             )}
 
+=======
+              <span>📄 Code de l'interface</span>
+              <span className="hint">HTML · JSX · Vue · Angular</span>
+            </div>
+            <textarea
+              className="code-input"
+              placeholder={`Collez votre code ici…\n\nExemple :\n<form>\n  <input type="email" placeholder="Email" />\n  <input type="password" placeholder="Mot de passe" />\n  <button type="submit">Se connecter</button>\n  <a href="/register">Créer un compte</a>\n  <a href="/forgot">Mot de passe oublié ?</a>\n</form>`}
+              value={code}
+              onChange={e => setCode(e.target.value)}
+              disabled={running}
+              spellCheck={false}
+            />
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
             <div className="card-footer">
               {running ? (
                 <button className="btn btn-danger" onClick={() => { abortRef.current?.abort(); setRunning(false); }}>
                   ⏹ Arrêter
                 </button>
               ) : (
+<<<<<<< HEAD
                 <button className="btn btn-primary" onClick={runPipeline} disabled={!canRun}>
+=======
+                <button className="btn btn-primary" onClick={runPipeline} disabled={!code.trim()}>
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
                   ▶ Analyser &amp; Générer
                 </button>
               )}
               {(analysis || error) && (
                 <button className="btn btn-ghost" onClick={reset}>↺ Réinitialiser</button>
               )}
+<<<<<<< HEAD
               {inputMode === "code" && <span className="char-count">{code.length} caractères</span>}
               {inputMode === "screenshot" && Boolean(imageFile) && !targetUrl.trim() && (
                 <span className="char-count">⚠️ Renseigne l'URL de la page pour générer les scripts Selenium</span>
               )}
+=======
+              <span className="char-count">{code.length} caractères</span>
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
             </div>
           </div>
 
@@ -338,7 +400,10 @@ const handleEvent = (event, payload) => {
           {/* Résumé final */}
           {summary && (
             <div className={`summary-card ${summary.failed === 0 ? "summary-pass" : "summary-mixed"}`}>
+<<<<<<< HEAD
               <div className="summary-title">📊 Résumé d'exécution</div>
+=======
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
               <div className="summary-row">
                 <span className="summary-stat">
                   <strong>{summary.total}</strong> scénarios
@@ -351,6 +416,7 @@ const handleEvent = (event, payload) => {
                     <strong>{summary.failed}</strong> ✗ échoués
                   </span>
                 )}
+<<<<<<< HEAD
                 {summary.coverage != null && (
                   <span className="summary-stat">
                     <strong>{summary.coverage}%</strong> couverture
@@ -366,6 +432,8 @@ const handleEvent = (event, payload) => {
                     📸 <strong>{summary.screenshots}</strong> captures
                   </span>
                 )}
+=======
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
               </div>
             </div>
           )}
@@ -379,6 +447,7 @@ const handleEvent = (event, payload) => {
             </div>
           )}
 
+<<<<<<< HEAD
           {warning && !error && (
             <div className="alert alert-warning">
               <strong>Mode dégradé</strong>{warning}
@@ -397,16 +466,28 @@ const handleEvent = (event, payload) => {
                 TestAuto extrait automatiquement tous les éléments interactifs
                 (par lecture du code ou par vision IA), génère chaque scénario
                 possible et produit les scripts Selenium associés.
+=======
+          {!analysis && !error && (
+            <div className="empty-state">
+              <span className="empty-icon">⌨️</span>
+              <p>Collez votre code HTML / JSX et lancez l'analyse</p>
+              <p className="empty-sub">
+                TestAuto extrait automatiquement tous les éléments interactifs,
+                génère chaque scénario possible et produit les scripts Selenium associés.
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
               </p>
             </div>
           )}
 
           {analysis && (
             <>
+<<<<<<< HEAD
               {/* Le rapport démarre directement sur les scénarios : plus de
                   bandeau technique (page_type / raw_description brut,
                   noms de zones type "navbar"/"block-...") avant celui-ci. */}
 
+=======
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
               {/* Onglets */}
               <div className="tabs">
                 <button className={`tab ${activeTab==="elements"  ? "active":""}`} onClick={()=>setActiveTab("elements")}>
@@ -534,6 +615,7 @@ const handleEvent = (event, payload) => {
                         <div className="exec-report">
                           <div className={`exec-status ${reports[activeScenario].success ? "exec-pass" : "exec-fail"}`}>
                             {reports[activeScenario].success ? "✓ Exécution réussie" : "✗ Exécution échouée"}
+<<<<<<< HEAD
                             {reports[activeScenario].execution_time != null && (
                               <span className="exec-time">⏱ {reports[activeScenario].execution_time.toFixed(2)} s</span>
                             )}
@@ -560,6 +642,9 @@ const handleEvent = (event, payload) => {
                             </div>
                           )}
 
+=======
+                          </div>
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
                           {reports[activeScenario].logs?.length > 0 && (
                             <div className="logs-block">
                               {reports[activeScenario].logs.map((l, i) => (
@@ -570,6 +655,7 @@ const handleEvent = (event, payload) => {
                           {reports[activeScenario].error && (
                             <div className="exec-error">{reports[activeScenario].error}</div>
                           )}
+<<<<<<< HEAD
 
                           {/* ── Diagnostic IA : cause probable + patch de code suggéré ── */}
                           {diagnoses[activeScenario]?.has_failures && (
@@ -647,6 +733,8 @@ const handleEvent = (event, payload) => {
                               <pre className="agent-report">{agentReports[activeScenario]}</pre>
                             </details>
                           )}
+=======
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
                         </div>
                       )}
                     </>
@@ -723,6 +811,7 @@ const handleEvent = (event, payload) => {
         }
         .code-input:disabled { opacity: 0.6; cursor: not-allowed; }
 
+<<<<<<< HEAD
         /* ── Mode toggle (code vs capture d'écran) ── */
         .mode-toggle {
           display: flex; gap: 6px; padding: 0.6rem 1rem 0;
@@ -765,6 +854,8 @@ const handleEvent = (event, payload) => {
         .vision-url-input:focus { border-color: #e84393; }
         .vision-url-input:disabled { opacity: 0.6; cursor: not-allowed; }
 
+=======
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
         .card-footer {
           padding: 0.75rem 1rem;
           border-top: 1px solid #e8ebf3;
@@ -825,6 +916,7 @@ const handleEvent = (event, payload) => {
         }
         .summary-pass  { background: #f0fff4; border-color: #36b37e; }
         .summary-mixed { background: #fffbe6; border-color: #faad14; }
+<<<<<<< HEAD
         .summary-title { font-weight: 700; font-size: 0.9rem; margin-bottom: 0.5rem; }
         .summary-row { display: flex; gap: 1rem; flex-wrap: wrap; }
         .summary-stat { font-size: 0.875rem; color: #3d4152; }
@@ -833,6 +925,11 @@ const handleEvent = (event, payload) => {
         .interface-banner-label { font-weight: 600; color: #4a5578; }
         .interface-banner-type { background: #4a5578; color: #fff; padding: 2px 10px; border-radius: 999px; font-size: 0.8rem; font-weight: 600; text-transform: capitalize; }
         .interface-banner-desc { color: #6b7591; }
+=======
+        .summary-row { display: flex; gap: 1rem; flex-wrap: wrap; }
+        .summary-stat { font-size: 0.875rem; color: #3d4152; }
+        .text-success { color: #1e7e50 !important; }
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
         .text-danger  { color: #c0392b !important; }
 
         /* ── Spinner ── */
@@ -976,6 +1073,7 @@ const handleEvent = (event, payload) => {
         .exec-status {
           padding: 8px 12px; border-radius: 8px; font-size: 0.875rem;
           font-weight: 600; margin: 0.75rem 0 0.5rem;
+<<<<<<< HEAD
           display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
         }
         .exec-pass { background: #e6f9f0; color: #1e7e50; }
@@ -997,6 +1095,11 @@ const handleEvent = (event, payload) => {
           max-width: 100%; border-radius: 8px; margin-top: 0.5rem;
           border: 1px solid #e2e5f0;
         }
+=======
+        }
+        .exec-pass { background: #e6f9f0; color: #1e7e50; }
+        .exec-fail { background: #fff1f0; color: #c0392b; }
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
         .logs-block {
           background: #1e1e2e; border-radius: 8px; padding: 10px 12px;
           max-height: 200px; overflow-y: auto;
@@ -1008,6 +1111,7 @@ const handleEvent = (event, payload) => {
           font-family: monospace; white-space: pre-wrap; word-break: break-all;
         }
 
+<<<<<<< HEAD
         /* ── Diagnostic IA (bug + correctif) ── */
         .ai-diagnosis {
           margin-top: 0.85rem; padding: 12px 14px;
@@ -1058,12 +1162,17 @@ const handleEvent = (event, payload) => {
           max-height: 360px; overflow-y: auto;
         }
 
+=======
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
         /* ── Alert ── */
         .alert { border-radius: 8px; padding: 12px 16px; font-size: 0.875rem; line-height: 1.5; }
         .alert-error { background: #fff1f0; border: 1px solid #ffa39e; color: #c0392b; }
         .alert-error strong { display: block; margin-bottom: 4px; }
+<<<<<<< HEAD
         .alert-warning { background: #fffbe6; border: 1px solid #ffe58f; color: #ad8b00; }
         .alert-warning strong { display: block; margin-bottom: 4px; }
+=======
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
 
         /* ── Responsive ── */
         @media (max-width: 900px) {
@@ -1074,4 +1183,8 @@ const handleEvent = (event, payload) => {
       `}</style>
     </div>
   );
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd

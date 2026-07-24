@@ -13,7 +13,11 @@ import asyncio
 import socket
 import threading
 from contextlib import asynccontextmanager
+<<<<<<< HEAD
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+=======
+from http.server import BaseHTTPRequestHandler, HTTPServer
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
 
 
 def _find_free_port() -> int:
@@ -27,6 +31,7 @@ def _find_free_port() -> int:
 def _make_handler(html_bytes: bytes):
     """Fabrique un handler HTTP qui sert toujours le même HTML."""
     class _Handler(BaseHTTPRequestHandler):
+<<<<<<< HEAD
         # Force "Connection: close" après CHAQUE réponse. Par défaut, Chrome
         # envoie "Connection: keep-alive" et le serveur reste bloqué à
         # attendre une 2e requête sur le même socket -> quand Chrome ferme
@@ -35,14 +40,21 @@ def _make_handler(html_bytes: bytes):
         # la connexion après la réponse évite cette attente inutile.
         close_connection = True
 
+=======
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
         def do_GET(self):
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
             self.send_header("Content-Length", str(len(html_bytes)))
+<<<<<<< HEAD
             self.send_header("Connection", "close")
             self.end_headers()
             self.wfile.write(html_bytes)
             self.close_connection = True
+=======
+            self.end_headers()
+            self.wfile.write(html_bytes)
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
 
         def log_message(self, format, *args):
             pass  # Silencieux
@@ -50,6 +62,7 @@ def _make_handler(html_bytes: bytes):
     return _Handler
 
 
+<<<<<<< HEAD
 class _QuietThreadingHTTPServer(ThreadingHTTPServer):
     """
     ThreadingHTTPServer qui n'imprime pas de traceback pour les erreurs
@@ -64,6 +77,8 @@ class _QuietThreadingHTTPServer(ThreadingHTTPServer):
         super().handle_error(request, client_address)
 
 
+=======
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
 @asynccontextmanager
 async def serve_html(html_code: str):
     """
@@ -80,8 +95,12 @@ async def serve_html(html_code: str):
     port = _find_free_port()
     handler = _make_handler(html_bytes)
 
+<<<<<<< HEAD
     server = _QuietThreadingHTTPServer(("localhost", port), handler)
     server.daemon_threads = True
+=======
+    server = HTTPServer(("localhost", port), handler)
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
 
@@ -90,4 +109,8 @@ async def serve_html(html_code: str):
         yield url
     finally:
         server.shutdown()
+<<<<<<< HEAD
         thread.join(timeout=3)
+=======
+        thread.join(timeout=3)
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd

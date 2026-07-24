@@ -6,6 +6,7 @@ Pipeline en 2 étapes :
      (pas les éléments HTML, les actions utilisateur : "traduire du texte", "changer de langue"...)
   2. Le LLM génère un scénario de test par fonctionnalité détectée
 """
+<<<<<<< HEAD
 import asyncio
 import httpx
 import json
@@ -34,6 +35,14 @@ if not logger.handlers:
     _h = logging.StreamHandler()
     _h.setFormatter(logging.Formatter("[scenario_service] %(message)s"))
     logger.addHandler(_h)
+=======
+import httpx
+import json
+import re
+
+from app.config import OLLAMA_BASE_URL, TEXT_MODEL, MAX_SCENARIOS
+from app.models.schemas import UIAnalysisResult, UIElement, TestScenario, AllScenarios
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -51,6 +60,7 @@ YOUR TASK:
 List every distinct FEATURE (user action / functionality) that a user can perform on this page.
 Focus on what the USER CAN DO, not on what HTML elements exist.
 
+<<<<<<< HEAD
 === CRITICAL ANTI-HALLUCINATION RULE ===
 You may ONLY describe features that are grounded in the elements list above.
 Every feature's "elements" array MUST contain at least one label copied
@@ -88,11 +98,23 @@ not content; your real output must come only from the elements list above):
     }}
   ]
 }}
+=======
+Examples of good features:
+- "Translate text between languages"
+- "Sign in with Google account"
+- "Search for a job by category"
+- "Play a daily word game"
+- "Switch the interface language"
+- "Browse learning courses by topic"
+- "Look up a word definition"
+- "Check grammar and spelling"
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
 
 Examples of BAD features (too generic, skip these):
 - "Click a link"
 - "Navigate to footer"
 - "See legal pages"
+<<<<<<< HEAD
 - "Authenticate" (too vague when several distinct providers/buttons exist — list each one instead)
 
 LANGUAGE: "page_purpose", "name" and "description" must be written in
@@ -230,10 +252,32 @@ async def _extract_features_capability_batch(
     JSON que _extract_features_batch (voir _extract_features_bottom_up),
     mais le lot n'est plus le point de départ du raisonnement — la capacité
     l'est.
+=======
+
+Respond ONLY with valid JSON:
+{{
+  "page_purpose": "One sentence describing what this page/app is for",
+  "features": [
+    {{
+      "name": "Short feature name (3-6 words)",
+      "description": "What the user does and what happens",
+      "elements": ["exact label of element 1", "exact label of element 2"],
+      "priority": "high|medium|low"
+    }}
+  ]
+}}
+"""
+
+
+async def _extract_features(analysis: UIAnalysisResult) -> dict:
+    """
+    Étape 1 : Le LLM lit les éléments et identifie les vraies fonctionnalités.
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
     """
     elements_list = "\n".join(
         f"  [{el.type.upper()}] {el.label}"
         + (f"  →  {el.possible_destination}" if el.possible_destination else "")
+<<<<<<< HEAD
         for el in elements
     )
     capabilities_list = "\n".join(
@@ -457,10 +501,21 @@ async def _extract_features_batch(
     # num_predict proportionnel à la taille du lot, avec large marge.
     num_predict = min(2200, 700 + len(elements) * 70)
 
+=======
+        for el in analysis.elements
+    )
+
+    prompt = FEATURE_EXTRACTION_PROMPT.format(
+        page_type=analysis.page_type or "general",
+        elements_list=elements_list,
+    )
+
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
     payload = {
         "model": TEXT_MODEL,
         "prompt": prompt,
         "stream": True,
+<<<<<<< HEAD
         # FIX PERF (régression du bug déjà connu du projet) : keep_alive=0
         # forçait Ollama à DÉCHARGER le modèle de la mémoire après CET appel
         # -> le lot suivant devait le recharger depuis le disque (30-90s de
@@ -476,6 +531,11 @@ async def _extract_features_batch(
             # place pour offloader plus de couches sur GPU au lieu du CPU.
             "num_ctx": 2048,
         },
+=======
+        "keep_alive": 0,
+        "format": "json",
+        "options": {"temperature": 0.2, "num_predict": 1500},
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
     }
 
     timeout = httpx.Timeout(timeout=None)
@@ -495,6 +555,7 @@ async def _extract_features_batch(
                     continue
 
     try:
+<<<<<<< HEAD
         data = json.loads(full.strip())
         if not data:
             logger.warning(
@@ -503,6 +564,9 @@ async def _extract_features_batch(
                 "caractères) : %r", len(elements), full[:500],
             )
         return data
+=======
+        return json.loads(full.strip())
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
     except Exception:
         match = re.search(r'\{[\s\S]*\}', full)
         if match:
@@ -510,6 +574,7 @@ async def _extract_features_batch(
                 return json.loads(match.group())
             except Exception:
                 pass
+<<<<<<< HEAD
         logger.warning(
             "Feature Discovery : JSON invalide/introuvable sur ce lot (%d "
             "élément(s)) -> 0 feature pour ce lot. Réponse brute reçue (500 "
@@ -1113,11 +1178,20 @@ async def _discover_structure(analysis: UIAnalysisResult) -> tuple[dict, list[di
     return features_data, nav_categories
 
 
+=======
+    return {}
+
+
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
 # ─────────────────────────────────────────────────────────────────────────────
 # ÉTAPE 2 : Génération des scénarios depuis les fonctionnalités
 # ─────────────────────────────────────────────────────────────────────────────
 
+<<<<<<< HEAD
 SCENARIO_GENERATION_PROMPT = """You are a senior QA automation engineer writing Selenium-ready test scenarios.
+=======
+SCENARIO_GENERATION_PROMPT = """You are a senior QA engineer. Write test scenarios for the features listed below.
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
 
 Application purpose: {page_purpose}
 
@@ -1127,6 +1201,7 @@ Application purpose: {page_purpose}
 === ALL AVAILABLE UI ELEMENTS (use EXACT labels in your steps) ===
 {elements_list}
 
+<<<<<<< HEAD
 === WHAT MAKES A GOOD SCENARIO ===
 
 1. ATOMIC — one scenario verifies ONE precise, narrow behavior. Do not
@@ -1186,11 +1261,25 @@ Application purpose: {page_purpose}
 10. Do NOT copy the example below verbatim. It only shows the JSON
     structure — every value in it must be REPLACED by content specific to
     the feature you are testing.
+=======
+=== RULES ===
+1. Write exactly ONE scenario per feature listed above
+2. Each scenario must test the REAL functionality described — not just clicking elements
+3. Use the EXACT element labels from the elements list (including [section] prefix)
+4. When an element has a destination URL (→ URL), include it in the verify step
+5. Steps must be concrete: what to click, what to type, what to verify as outcome
+6. Max 6 steps per scenario
+7. DO NOT repeat scenarios — each must test something different
+8. Think about the FULL user journey: setup → action → verification
+9. For forms: include filling fields, submitting, and verifying the result
+10. For navigation: include clicking AND verifying the correct page loaded
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
 
 Respond ONLY with valid JSON:
 {{
   "scenarios": [
     {{
+<<<<<<< HEAD
       "title": "Vérifier l'envoi d'un document PDF",
       "steps": [
         "Étape 1 : Cliquer sur « Choisir un fichier »",
@@ -1198,12 +1287,22 @@ Respond ONLY with valid JSON:
         "Étape 3 : Cliquer sur « Traduire »"
       ],
       "expected_result": "Le nom du fichier apparaît dans la zone de sélection"
+=======
+      "title": "Feature name: specific action being tested",
+      "steps": [
+        "Step 1: Navigate to the page",
+        "Step 2: [specific action on specific element]",
+        "Step 3: [verify specific outcome]"
+      ],
+      "expected_result": "Specific, observable outcome"
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
     }}
   ]
 }}
 """
 
 
+<<<<<<< HEAD
 _TEMPLATE_LEAK_PREFIXES = ("feature name:", "feature:")
 _TEMPLATE_LEAK_STEP_RE = re.compile(r"^(step \d+)\s*:\s*", re.IGNORECASE)
 
@@ -1404,12 +1503,15 @@ def _template_scenario_for_feature(feature: dict) -> dict:
     }
 
 
+=======
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
 async def _generate_scenarios_from_features(
     features_data: dict,
     analysis: UIAnalysisResult,
 ) -> list[dict]:
     """
     Étape 2 : Génère un scénario par fonctionnalité identifiée.
+<<<<<<< HEAD
 
     Découpé en LOTS de SCENARIO_GEN_BATCH_SIZE fonctionnalités : demander
     d'un coup 10+ scénarios détaillés (jusqu'à 6 étapes chacun) à un petit
@@ -1417,10 +1519,13 @@ async def _generate_scenarios_from_features(
     -> les DERNIERES fonctionnalités (souvent les onglets secondaires
     listés en fin de prompt, ex: Correcteur/Vocabulaire) n'obtiennent
     jamais leur scénario alors qu'elles avaient pourtant été détectées.
+=======
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
     """
     features = features_data.get("features", [])
     page_purpose = features_data.get("page_purpose", analysis.raw_description or "")
 
+<<<<<<< HEAD
     # Les features marquées "_template" (filet de sécurité _ensure_element_
     # coverage : liens/boutons triviaux non repérés par le LLM d'extraction)
     # ne passent PAS par le LLM ici — voir generate_all_scenarios, qui leur
@@ -1429,6 +1534,8 @@ async def _generate_scenarios_from_features(
     # peut retirer 15-20 appels LLM inutiles pour de simples clics de lien.
     features = [f for f in features if not f.get("_template")]
 
+=======
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
     if not features:
         return []
 
@@ -1439,15 +1546,28 @@ async def _generate_scenarios_from_features(
         key=lambda f: priority_order.get(f.get("priority", "medium"), 1)
     )
 
+<<<<<<< HEAD
     # Limite au nombre de scénarios voulu (cap global de sécurité)
     features_to_test = features_sorted[:MAX_SCENARIOS]
 
+=======
+    # Limite au nombre de scénarios voulu
+    features_to_test = features_sorted[:MAX_SCENARIOS]
+
+    features_list = "\n".join(
+        f"  {i+1}. [{f.get('priority','medium').upper()}] {f['name']}: {f['description']}"
+        + (f"\n     Elements: {f.get('elements', [])}" if f.get('elements') else "")
+        for i, f in enumerate(features_to_test)
+    )
+
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
     elements_list = "\n".join(
         f"  [{el.type.upper()}] {el.label}"
         + (f"  →  {el.possible_destination}" if el.possible_destination else "")
         for el in analysis.elements
     )
 
+<<<<<<< HEAD
     # FIX PERF : ces lots étaient auparavant traités SÉQUENTIELLEMENT (boucle
     # for + await), donc le temps total = somme du temps de chaque lot. On
     # les lance maintenant en concurrence (borné par SCENARIO_GEN_CONCURRENCY,
@@ -1490,19 +1610,25 @@ async def _generate_scenarios_batch(
         for i, f in enumerate(features_batch)
     )
 
+=======
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
     prompt = SCENARIO_GENERATION_PROMPT.format(
         page_purpose=page_purpose,
         features_list=features_list,
         elements_list=elements_list,
     )
 
+<<<<<<< HEAD
     # num_predict proportionnel au nombre de scénarios demandés dans ce lot
     num_predict = min(3500, 900 + len(features_batch) * 400)
 
+=======
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
     payload = {
         "model": TEXT_MODEL,
         "prompt": prompt,
         "stream": True,
+<<<<<<< HEAD
         # FIX PERF : idem _extract_features_batch — même cause, même fix.
         "keep_alive": "5m",
         "format": "json",
@@ -1511,6 +1637,11 @@ async def _generate_scenarios_batch(
             "num_predict": num_predict,
             "num_ctx": 2048,
         },
+=======
+        "keep_alive": 0,
+        "format": "json",
+        "options": {"temperature": 0.3, "num_predict": 3000},
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
     }
 
     timeout = httpx.Timeout(timeout=None)
@@ -1548,6 +1679,7 @@ async def _generate_scenarios_batch(
 
 async def generate_all_scenarios(analysis: UIAnalysisResult) -> AllScenarios:
     """
+<<<<<<< HEAD
     Pipeline :
     1. LLM extrait les fonctionnalités réelles de la page
     2. Test Planning Agent (test_planning_service) décide, PAR FEATURE, quels
@@ -1626,12 +1758,27 @@ async def generate_all_scenarios(analysis: UIAnalysisResult) -> AllScenarios:
     # juste en dessous sur le Problème 7 : même raisonnement, étendu à
     # ces nouveaux scénarios.
     raw_scenarios = llm_scenarios[:MAX_SCENARIOS] + template_scenarios + nav_scenarios
+=======
+    Pipeline 2 étapes :
+    1. LLM extrait les fonctionnalités réelles de la page
+    2. LLM génère un scénario de test par fonctionnalité
+    """
+
+    # ── Étape 1 : Comprendre ce que fait la page ──────────────────────────────
+    features_data = await _extract_features(analysis)
+
+    # ── Étape 2 : Générer les scénarios ───────────────────────────────────────
+    raw_scenarios = []
+    if features_data.get("features"):
+        raw_scenarios = await _generate_scenarios_from_features(features_data, analysis)
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
 
     # ── Fallback si le LLM échoue ─────────────────────────────────────────────
     if not raw_scenarios:
         raw_scenarios = _fallback_from_elements(analysis)
 
     scenarios = []
+<<<<<<< HEAD
     for s in raw_scenarios:
         try:
             clean = _sanitize_scenario_dict(s, fallback_title=str(s.get("title") or "Scénario"))
@@ -1653,6 +1800,14 @@ async def generate_all_scenarios(analysis: UIAnalysisResult) -> AllScenarios:
         deduped_scenarios.append(sc)
     scenarios = deduped_scenarios
 
+=======
+    for s in raw_scenarios[:MAX_SCENARIOS]:
+        try:
+            scenarios.append(TestScenario(**s))
+        except Exception:
+            continue
+
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
     if not scenarios:
         scenarios = _fallback_from_elements(analysis)
 
@@ -1689,6 +1844,7 @@ def _fallback_from_elements(analysis: UIAnalysisResult) -> list[TestScenario]:
 
 async def extract_page_features(analysis: UIAnalysisResult) -> dict:
     """
+<<<<<<< HEAD
     Exposé pour main.py / orchestrator_service.py (pipeline LangGraph).
     Applique le même filtre anti-hallucination, la même garantie de
     couverture, ET la même garantie de détection de sous-menus que
@@ -1720,3 +1876,13 @@ async def extract_page_features_and_nav(analysis: UIAnalysisResult) -> tuple[dic
 def nav_scenario_dicts(nav_categories: list[dict]) -> list[dict]:
     """Expose _scenario_dict_from_nav_category() à orchestrator_service.py."""
     return [_scenario_dict_from_nav_category(c) for c in nav_categories]
+=======
+    Exposé pour main.py si tu veux afficher les features dans l'UI
+    avant de lancer la génération de scénarios.
+    Usage dans main.py :
+        features = await extract_page_features(analysis)
+        yield sse("features_detected", {"features": features})
+        all_scenarios = await generate_all_scenarios(analysis)
+    """
+    return await _extract_features(analysis)
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd

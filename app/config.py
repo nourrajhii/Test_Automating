@@ -3,6 +3,7 @@
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 
 # Modele texte pour l'analyse HTML, la generation de scenarios et de scripts
+<<<<<<< HEAD
 TEXT_MODEL = os.getenv("TEXT_MODEL", "llama3.2:1b")
 
 # Modele multimodal (vision) pour l'analyse de captures d'ecran
@@ -27,10 +28,14 @@ TESSERACT_CMD = os.getenv("TESSERACT_CMD", r"C:\Program Files\Tesseract-OCR\tess
 # ou moins contrasté que le contenu principal -> confiance OCR plus faible.
 # Un seuil trop strict les faisait disparaitre AVANT même d'atteindre le LLM.
 OCR_MIN_CONFIDENCE = int(os.getenv("OCR_MIN_CONFIDENCE", "28"))
+=======
+TEXT_MODEL = os.getenv("TEXT_MODEL", "llama3.2:3b")
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
 
 REPORTS_DIR = "reports"
 UPLOAD_DIR  = "uploads"
 
+<<<<<<< HEAD
 # Dossier où sont enregistrées les captures d'écran prises à la fin de
 # CHAQUE scénario (succès ou échec) par le script Selenium généré. Utilisé
 # par script_service (écriture) et report_service (lecture pour embarquer
@@ -197,3 +202,11 @@ SCENARIO_GEN_CONCURRENCY = int(os.getenv("SCENARIO_GEN_CONCURRENCY", "3"))
 # de tests exécutés. Rebaisse à 3-4 si ta machine a moins de 8 Go de RAM
 # libre ou si tu vois des erreurs "cannot connect to Chrome".
 EXECUTION_CONCURRENCY = int(os.getenv("EXECUTION_CONCURRENCY", "6"))
+=======
+# Timeouts (en secondes)
+TEXT_TIMEOUT      = int(os.getenv("TEXT_TIMEOUT",      "360"))
+EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", "120"))
+
+# Nombre max de scenarios a generer par interface
+MAX_SCENARIOS = int(os.getenv("MAX_SCENARIOS", "6"))
+>>>>>>> 9187a6f133368f59938ee0cf3b3cb68806004bcd
